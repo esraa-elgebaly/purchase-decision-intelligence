@@ -2,19 +2,11 @@
 
 
 
-A purchase-intent model for an online cosmetics store, built on \*\*5 months of real events\*\* (October 2019 – February 2020) from the \*\*REES46\*\* dataset, and turned into a weekly scoring pipeline and a Streamlit app.
+Purchase-intent modeling for an online cosmetics store, built on \*\*5 months of real e-commerce events\*\* (October 2019 – February 2020, about 3.5 million events per month), and turned into a weekly scoring pipeline and a 4-page Streamlit app.
 
 
 
-\*\*Goal:\*\* among users who added something to their cart, find the ones who will buy in the next 7 days, so the store contacts fewer people and still reaches most buyers.
-
-
-
-| Target | Task | Definition |
-
-|---|---|---|
-
-| Purchase in the next 7 days | Binary classification | 1 if a cart user buys anything in the 7 days after the cutoff date |
+📓 \*\*Notebook:\*\* \[01\_loading\_and\_cleaning.ipynb](notebooks/01\_loading\_and\_cleaning.ipynb) · 🖥️ \*\*App:\*\* \[app/Overview.py](app/Overview.py)
 
 
 
@@ -26,25 +18,127 @@ A purchase-intent model for an online cosmetics store, built on \*\*5 months of 
 
 
 
+\## Contents
+
+\- \[The story](#the-story)
+
+\- \[Goal](#goal)
+
+\- \[Results at a glance](#results-at-a-glance)
+
+\- \[Data](#data)
+
+\- \[Pipeline](#pipeline)
+
+\- \[Repository structure](#repository-structure)
+
+\- \[Cleaning](#cleaning)
+
+\- \[Findings](#findings)
+
+\- \[From EDA to the model](#from-eda-to-the-model)
+
+\- \[Modeling setup](#modeling-setup)
+
+\- \[Models and results](#models-and-results)
+
+\- \[What drives the model](#what-drives-the-model)
+
+\- \[From model to product](#from-model-to-product)
+
+\- \[Next steps](#next-steps)
+
+\- \[Limitations](#limitations)
+
+\- \[How to run](#how-to-run)
+
+
+
+\---
+
+
+
+\## The story
+
+
+
+The store gets about \*\*390,000 visitors a month\*\*, and only \*\*6–9% of them buy\*\*. Most visitors look at one product and leave, and that is normal. The real loss is at the cart: in December about \*\*84,000 users added something to their cart, and only about 26,000 bought\*\*. Seven out of ten cart users walked away.
+
+
+
+The usual answer is a reminder or a discount for everyone. That spends money on people who will never buy, and gives discounts to people who would have bought anyway.
+
+
+
+So the question became: \*\*if the store can contact only 1 in 10 cart users this week, who should it be?\*\*
+
+
+
+In February, a month the model never saw, there were 50,392 cart users and 2,179 of them bought in the next 7 days. Picking 5,040 users at random would find about \*\*218 buyers\*\*. The model's top 5,040 found \*\*844\*\*, almost 4 times more for the same budget.
+
+
+
+\---
+
+
+
+\## Goal
+
+
+
+| Target | Task | Definition |
+
+|---|---|---|
+
+| Purchase in the next 7 days | Binary classification | 1 if a cart user buys anything in the 7 days after the cutoff (day 15 of the month) |
+
+
+
+Each row is \*\*one cart user at one cutoff date\*\*. Features use only the 14 days \*\*before\*\* the cutoff; the target uses only the 7 days \*\*after\*\* it.
+
+
+
+\---
+
+
+
 \## Results at a glance
 
+\- \*\*Sales follow the buy rate, not traffic.\*\* November had 8% fewer visitors than October but 26% more sales, because the buy rate jumped from 6.5% to 8.6%.
+
+\- \*\*December lost basket size, not buyers.\*\* It had as many buyers as October (25.6K) but each spent 10% less, so it was the weakest month.
+
+\- \*\*Recency is everything.\*\* Cart users active in the last day bought at 12.3%; after a week of silence, only 2.0%.
+
+\- \*\*Price doesn't decide.\*\* Its correlation with purchase is −0.01, and it is one of the weakest model inputs.
+
+\- \*\*The model:\*\* PR-AUC \*\*0.158\*\* on February, \*\*3.7× random\*\* (0.043), almost the same as on January (0.159).
+
+\- \*\*The business result:\*\* contacting the top 10% reaches \*\*38.7% of all buyers\*\*, and 1 in 6 contacted users buys (1 in 23 at random).
 
 
-Tested on \*\*February\*\*, a month the model never saw:
+
+\---
 
 
 
-| Measure | Result |
+\## Data
+
+
+
+| | |
 
 |---|---|
 
-| PR-AUC | \*\*0.158\*\*, 3.7× random (0.043) |
+| \*\*Source\*\* | \[REES46 eCommerce events, cosmetics shop](https://www.kaggle.com/datasets/mkechinov/ecommerce-events-history-in-cosmetics-shop) (Kaggle) |
 
-| Buyers reached by contacting the top 10% | \*\*38.7%\*\* of all buyers |
+| \*\*Period\*\* | October 2019 to February 2020 · 5 monthly CSV files · about 3.5 million events per month |
 
-| Buy rate among contacted users | \*\*16.7%\*\*, 3.9× random (4.3%) |
+| \*\*Events\*\* | `view`, `cart`, `remove\_from\_cart`, `purchase` |
 
-| Same budget (5,040 users) | about \*\*840 buyers\*\* reached, vs about \*\*220\*\* at random |
+| \*\*Columns (9)\*\* | `event\_time`, `event\_type`, `product\_id`, `category\_id`, `category\_code`, `brand`, `price`, `user\_id`, `user\_session` |
+
+| \*\*Note\*\* | The raw CSVs are too large for GitHub; download them into `data/raw/` |
 
 
 
@@ -62,17 +156,19 @@ flowchart LR
 
 &#x20;   A\["Raw events<br/>5 monthly CSVs"] --> B\["Cleaning<br/>duplicates, prices, bot"]
 
-&#x20;   B --> C\["Features<br/>14 days before the cutoff"]
+&#x20;   B --> C\["EDA<br/>questions → decisions"]
 
-&#x20;   C --> D\["Time-based split<br/>train / validation / test"]
+&#x20;   C --> D\["Features<br/>14 days before the cutoff"]
 
-&#x20;   D --> E\["Baselines and models<br/>rule, LR, RF, LightGBM"]
+&#x20;   D --> E\["Time-based split<br/>train / validation / test"]
 
-&#x20;   E --> F\["Final test<br/>February, used once"]
+&#x20;   E --> F\["Models<br/>rule → LR → RF → LightGBM"]
 
-&#x20;   F --> G\["Weekly scoring<br/>ranked list + reasons"]
+&#x20;   F --> G\["Final test<br/>February, used once"]
 
-&#x20;   G --> H\["Streamlit app<br/>and Power BI tables"]
+&#x20;   G --> H\["Weekly scoring<br/>ranked list + reasons"]
+
+&#x20;   H --> I\["Streamlit app<br/>+ Power BI tables"]
 
 ```
 
@@ -84,7 +180,7 @@ flowchart LR
 
 2\. Nothing is deleted before it is understood.
 
-3\. Features use only events \*\*before\*\* the cutoff; the target uses only events \*\*after\*\* it.
+3\. Features use only the past; the target uses only the future.
 
 4\. The split is by time, never random.
 
@@ -124,9 +220,7 @@ flowchart LR
 
 │   ├── pages/                          # Campaign planner, Customer lookup, Model health
 
-│   ├── common.py, charts.py, style.css
-
-│   └── model.txt, scores.csv, ...      # everything the app needs to run
+│   └── ...                             # styles, charts, model and scores the app needs
 
 ├── models/                             # saved LightGBM model and its settings
 
@@ -144,19 +238,15 @@ flowchart LR
 
 
 
-\*\*Notebook outline\*\*
-
-
-
-| Stage | What it covers |
+| Notebook stage | What it covers |
 
 |---|---|
 
-| Loading and cleaning | Duplicates, missing values, bad prices, before/after check |
+| Loading and cleaning | Duplicates, missing values, bad prices, the bot, before/after check |
 
-| EDA | 11 questions on buyers, timing, price, brand, and months |
+| EDA | Funnel, timing, price, brand, months, December day by day, correlations |
 
-| Target and features | Cutoff on day 15, 14 days of history, 7-day target |
+| Target and features | Cutoff on day 15, 14 days of history, 7-day target, 14 features |
 
 | Modeling | Rule baseline, Logistic Regression, LightGBM, Random Forest, tuning |
 
@@ -170,49 +260,25 @@ flowchart LR
 
 
 
-\## Data
-
-
-
-| | |
-
-|---|---|
-
-| \*\*Source\*\* | \[REES46 eCommerce events, cosmetics shop](https://www.kaggle.com/datasets/mkechinov/ecommerce-events-history-in-cosmetics-shop) (Kaggle) |
-
-| \*\*Period\*\* | October 2019 to February 2020 · about 3.5 million events per month |
-
-| \*\*Events\*\* | `view`, `cart`, `remove\_from\_cart`, `purchase` |
-
-| \*\*Columns\*\* | `event\_time`, `event\_type`, `product\_id`, `category\_id`, `category\_code`, `brand`, `price`, `user\_id`, `user\_session` |
-
-| \*\*Not included\*\* | Raw CSVs are too large for GitHub; download them into `data/raw/` |
-
-
-
-\---
-
-
-
 \## Cleaning
 
 
 
-| Step | What was checked | Decision |
+| Step | What was checked | Result | Decision |
 
-|---|---|---|
+|---|---|---|---|
 
-| Duplicates | 184K duplicate rows, 91% of them `remove\_from\_cart` logged once per item in the same second | Removed: the model counts actions, not items |
+| Duplicates | Identical rows | 184K rows, 91% of them `remove\_from\_cart` logged once per item in the same second | Removed: the model counts actions, not items |
 
-| `category\_code` | 98% empty; `category\_id` is complete | Dropped the column |
+| `category\_code` | Missing values | 98% empty; `category\_id` is complete | Dropped |
 
-| `brand` | 43% empty; "unknown" brands sell above average | Filled with `"unknown"` |
+| `brand` | Missing values | 43% empty; same median price, but "unknown" brands sell above average | Filled with `"unknown"` |
 
-| Prices | Zero or negative prices, mostly on real view events | Kept the row, cleared the price |
+| `price` | Impossible values | Zero or negative prices, mostly on real view events | Row kept, price cleared |
 
-| Unusual users | One user with 5,343 visits in 14 days: a cart action every \~1.5 seconds, product IDs in sequence, no purchases | Confirmed bot, removed from training only |
+| Outliers | Users far above the rest | One user: 5,343 visits in 14 days, a cart action every \~1.5 s, product IDs in sequence, no purchases | Confirmed bot, removed from training only |
 
-| Before / after | Event mix, prices and users per day | Same shape, errors removed |
+| Before / after | Event mix, prices, users per day | Same shape, errors gone | Clean data saved |
 
 
 
@@ -224,35 +290,89 @@ flowchart LR
 
 
 
-\## EDA: questions and answers
+\## Findings
 
 
 
-| # | Question | Answer |
+\### 1. Sales follow the buy rate, not traffic
 
-|---|---|---|
-
-| \*\*Q1\*\* | Where is the store losing buyers? | \*\*At the cart.\*\* 70% of cart users never buy |
-
-| \*\*Q2\*\* | How are buyers different from cart users who don't buy? | About \*\*3× more active\*\*, and they edit their cart more |
-
-| \*\*Q3\*\* | How fast do buyers buy? | Half check out within an hour of their first cart; \*\*84% within 7 days\*\* |
-
-| \*\*Q4\*\* | Does price separate buyers? | \*\*No.\*\* Buyers and non-buyers look at similar prices |
-
-| \*\*Q5\*\* | Does brand matter? | \*\*Yes.\*\* Buy rates range from 0.3% to 50% across brands |
-
-| \*\*Q6\*\* | Do sales follow traffic or buy rate? | \*\*Buy rate.\*\* Visitors stay stable every month |
-
-| \*\*Q7\*\* | Why was November the best month? | Black Friday: \*\*more visitors bought\*\*, not more visitors came |
+Visitors barely move from month to month (368K–410K). What moves is how many of them buy.
 
 
 
-| Monthly sales and buy rate | December, day by day |
+| Month | Visitors | Buyers | Buy rate | Spend per buyer | Sales |
+
+|---|---|---|---|---|---|
+
+| Oct 2019 | 399,634 | 25,762 | 6.45% | 47.00 | 1.21M |
+
+| \*\*Nov 2019\*\* | 368,183 | \*\*31,524\*\* | \*\*8.56%\*\* | \*\*48.56\*\* | \*\*1.53M\*\* |
+
+| Dec 2019 | 370,108 | 25,613 | 6.92% | \*\*42.08\*\* | \*\*1.08M\*\* |
+
+| Jan 2020 | \*\*410,018\*\* | 28,220 | 6.88% | 46.84 | 1.32M |
+
+| Feb 2020 | 391,005 | 25,759 | 6.59% | 46.86 | 1.21M |
+
+
+
+November (Black Friday) had \*\*fewer\*\* visitors than October but the best sales: more visitors bought, and they spent more. January had the \*\*most\*\* visitors and still sold about 14% less than November. Growth comes from converting visitors, not from bringing more of them, which is exactly what this project targets.
+
+
+
+!\[Monthly sales story](reports/figures/monthly\_comparison.png)
+
+
+
+\### 2. December lost basket size, not buyers
+
+December had almost the same number of buyers as October (25,613 vs 25,762), but each buyer spent about 10% less, which made it the weakest month. Day by day, activity peaks in the second week (about 157K events a day) and then falls by about 80% by 31 December, as shoppers leave for the holidays.
+
+
+
+!\[December day by day](reports/figures/december\_daily.png)
+
+
+
+\### 3. The cart is where buyers are lost
+
+In December, about 359K users viewed a product, about 84K added something to the cart, and about 26K bought. Viewing and leaving is normal; \*\*adding to the cart and leaving is lost revenue\*\*, so the model scores cart users only.
+
+
+
+Purchases move with cart activity, not with price:
+
+
+
+| Behavior | Correlation with purchase |
 
 |---|---|
 
-| !\[Monthly comparison](reports/figures/monthly\_comparison.png) | !\[December daily](reports/figures/december\_daily.png) |
+| Cart removes | 0.55 |
+
+| Cart adds | 0.54 |
+
+| Views | 0.29 |
+
+| Visits | 0.29 |
+
+| Average price | −0.01 |
+
+
+
+Buyers are about 3× more active than cart users who don't buy, and they edit their cart more (add, remove, add again).
+
+
+
+\### 4. Buyers decide fast
+
+Half of buyers check out within an hour of their first cart, and \*\*84% buy within 7 days\*\*, which sets the 7-day target window. The hour and the weekday matter much less: the buy rate moves between about 3% (late night) and 5.5% (10 AM), and only between 5% and 6% across weekdays.
+
+
+
+\### 5. Brand matters, price doesn't
+
+Buy rates range from \*\*0.3% to 50%\*\* across brands, while buyers and non-buyers look at similar prices. So the model gets the brand's buy rate (from the history window only), and price stays as a single, weak feature.
 
 
 
@@ -268,27 +388,25 @@ flowchart LR
 
 |---|---|
 
-| Most losses happen at the cart | Score only users with cart activity |
+| Losses happen at the cart | Score only users with cart activity |
 
 | 84% of buyers buy within 7 days | 7-day target window |
 
-| Buying happens soon after activity | Recency features: days since last activity, first activity, last cart action |
+| Buying follows recent activity | Days since last activity, since first activity, since last cart action |
 
-| Buyers are more active and edit their cart | Counts of views, carts, removes, visits; removes per cart item |
+| Buyers are more active and edit their cart | Counts of views, carts, removes, visits; removes per cart item; views per visit |
 
-| Brand matters, price barely does | Average brand buy rate as a feature; price kept as one feature only |
+| Brand matters, price barely does | Brand buy rate as a feature; average price kept as one feature |
 
-| Only about 5% of cart users buy | PR-AUC instead of accuracy; threshold set by budget |
+| Hour and weekday matter little | Kept as the hour and weekday of the last visit, one-hot |
+
+| Only \~4–5% of cart users buy | PR-AUC instead of accuracy; threshold set by budget |
 
 | November behaves differently | Kept out of training, used to check drift |
 
 | Counts are very skewed | `log1p` and 99% caps learned from training months |
 
-| One bot in the data | Removed from training only, scored like anyone else |
-
-
-
-\*\*14 features:\*\* views, cart adds, cart removes, past purchases, visits, days since last activity, days since first activity, days since last cart action, views per visit, removes per cart item, average price, average brand buy rate, hour and weekday of the last visit.
+| One bot in the data | Removed from training only |
 
 
 
@@ -302,6 +420,8 @@ flowchart LR
 
 \### Time-based split
 
+The split is by time, never random, so the model never learns from the future. January chooses the settings; February is used once, at the end.
+
 
 
 | Part | Months | Used for |
@@ -312,7 +432,7 @@ flowchart LR
 
 | Validation | January | Comparing models, tuning, choosing the threshold |
 
-| Test | February | \*\*Used once\*\*, after every decision was locked |
+| Test | February · 50,392 cart users · 2,179 buyers (4.3%) | \*\*Used once\*\*, after every decision was locked |
 
 | Monitoring | November | Checking behavior change (Black Friday) |
 
@@ -330,9 +450,9 @@ The final model was retrained on October, December and January before the Februa
 
 |---|---|
 
-| \*\*PR-AUC\*\* | How well the model ranks buyers above non-buyers; compared with the random rate |
+| \*\*PR-AUC\*\* | How well buyers are ranked above non-buyers |
 
-| \*\*vs random\*\* | PR-AUC divided by the share of buyers |
+| \*\*vs random\*\* | PR-AUC divided by the share of buyers (random = 1×) |
 
 | \*\*Buyers reached at top 10%\*\* | Share of all buyers found by contacting the top 10% |
 
@@ -340,7 +460,7 @@ The final model was retrained on October, December and January before the Februa
 
 | \*\*Train − validation gap\*\* | How much the model memorizes the training months |
 
-| Accuracy | Not used: 95% of users don't buy, so "nobody buys" already scores 95% |
+| Accuracy | Not used: "nobody buys" is already 95% accurate |
 
 
 
@@ -348,11 +468,11 @@ The final model was retrained on October, December and January before the Februa
 
 
 
-\## Models
+\## Models and results
 
 
 
-\### Validation (January)
+\### Validation (January): from simplest to strongest
 
 
 
@@ -370,11 +490,13 @@ The final model was retrained on October, December and January before the Februa
 
 
 
-\- \*\*Logistic Regression was stable but underfit:\*\* even on its own training data it stayed below 0.15.
+\- \*\*A simple rule is already 2× better than random\*\*, so recency carries real signal.
 
-\- \*\*LightGBM and Random Forest scored almost the same\*\*, so the limit is in the features, not the algorithm. LightGBM was chosen because it memorizes less than half as much, runs faster, and handles missing values on its own.
+\- \*\*Logistic Regression was stable but underfit:\*\* even on its own training data it stayed below 0.15. A straight line had reached its ceiling.
 
-\- \*\*Tuning:\*\* the first LightGBM had a gap of 0.079. The selection rule was set before looking at results; at least 500 users per leaf cut the gap about 4× with no loss on January.
+\- \*\*LightGBM and Random Forest scored almost the same\*\*, so the limit is in the features, not the algorithm. LightGBM won because it memorizes less than half as much, runs faster, and handles missing values on its own.
+
+\- \*\*Tuning:\*\* the first LightGBM memorized the training months (gap 0.079). The selection rule was set before looking at results; requiring at least 500 users per leaf cut the gap about 4× with no loss on January. Final model: 75 trees, 15 leaves.
 
 
 
@@ -386,7 +508,9 @@ The final model was retrained on October, December and January before the Februa
 
 
 
-\### Final test (February)
+\### Final test (February, never seen before)
+
+Before running it, I wrote down what I expected: 0.14–0.15.
 
 
 
@@ -404,19 +528,31 @@ The final model was retrained on October, December and January before the Februa
 
 
 
-The expected score was written down before the test (0.14–0.15). February matched January almost exactly, so the model held up on new data.
+February (0.158) matched January (0.159), so the model held up on new data.
 
 
 
-| Campaign decision (top 10%) | Value |
+\### What a campaign gets
+
+
+
+| Contact the top… | Buyers reached |
 
 |---|---|
 
-| Users contacted | 5,040 |
+| 5% | 25.4% |
 
-| Buyers reached | 38.7% of all buyers |
+| \*\*10%\*\* | \*\*38.7%\*\* |
 
-| Buy rate among contacted | 16.7% (3.9× random) |
+| 20% | 55.4% |
+
+| 30% | 65.9% |
+
+| 50% | 81.8% |
+
+
+
+Contacting half of the cart users reaches 82% of buyers. The budget decides where to stop; the model decides who comes first.
 
 
 
@@ -440,7 +576,53 @@ The threshold is a budget decision ("contact the top 10%"), and it landed almost
 
 
 
-SHAP shows the model relies on behavior, matching the EDA. \*\*Recent activity is the strongest signal:\*\* after about a week without activity, the chance of buying drops sharply. Price, hour and weekday barely matter once activity is known.
+SHAP confirms the EDA: the model relies on \*\*behavior\*\*, not on price or time of day.
+
+
+
+| Feature | Average SHAP effect |
+
+|---|---|
+
+| Days since last activity | \*\*0.54\*\* |
+
+| Cart adds | 0.31 |
+
+| Views | 0.24 |
+
+| Cart removes | 0.20 |
+
+| Days since last cart action | 0.16 |
+
+| … | |
+
+| Average price | 0.03 |
+
+| Hour of last visit | 0.01 |
+
+| Weekday of last visit | 0.005 |
+
+
+
+The strongest signal is recency, and February shows it plainly:
+
+
+
+| Last activity | Cart users | Bought in the next 7 days |
+
+|---|---|---|
+
+| Less than 1 day ago | 5,597 | \*\*12.3%\*\* |
+
+| 1–3 days ago | 9,943 | 6.0% |
+
+| 3–7 days ago | 14,372 | 3.5% |
+
+| More than 7 days ago | 20,480 | 2.0% |
+
+
+
+\*\*After about a week without activity, the chance of buying drops sharply.\*\* A reminder is worth the most in the first days after the cart.
 
 
 
@@ -460,11 +642,39 @@ SHAP shows the model relies on behavior, matching the EDA. \*\*Recent activity i
 
 
 
-\*\*Weekly scoring\*\* (`src/score.py`): cleans a new month, builds features, scores every cart user, and writes a ranked list with each user's top reasons in plain words, ready for a CRM. Running it on February reproduces the notebook exactly (PR-AUC 0.158, 39% of buyers reached).
+A model only creates value when a team can act on it.
 
 
 
-\*\*Streamlit app\*\* (`app/`):
+\*\*Weekly scoring\*\* (`src/score.py`): cleans a new month, builds features, scores every cart user, and writes a ranked list with each user's top reasons in plain words, ready for a CRM. Running it on February reproduces the notebook exactly (PR-AUC 0.158, 38.7% of buyers reached). One row of the output:
+
+
+
+| Rank | Score | Segment | Action | Why |
+
+|---|---|---|---|---|
+
+| 1 | 0.43 | High intent | Send reminder, no discount | active 0.1 days ago; last cart action 0.1 days ago |
+
+
+
+\*\*Action plan by segment (February):\*\*
+
+
+
+| Segment | Cart users | Buyers | Buy rate | Share of all buyers | Action |
+
+|---|---|---|---|---|---|
+
+| High intent (top 10%) | 5,039 | 844 | \*\*16.7%\*\* | \*\*38.7%\*\* | Send a reminder, \*\*no discount\*\* (likely to buy anyway) |
+
+| Medium intent (next 20%) | 10,078 | 592 | 5.9% | 27.2% | Test a small discount |
+
+| Low intent (other 70%) | 35,275 | 743 | 2.1% | 34.1% | Don't contact this week |
+
+
+
+\*\*Streamlit app\*\* (`app/`): one tool, four teams.
 
 
 
@@ -486,33 +696,17 @@ SHAP shows the model relies on behavior, matching the EDA. \*\*Recent activity i
 
 
 
-\*\*Action plan by segment:\*\*
-
-
-
-| Segment | Share of users | Action |
-
-|---|---|---|
-
-| High intent | Top 10% | Send a reminder, \*\*no discount\*\* (likely to buy anyway) |
-
-| Medium intent | Next 20% | Test a small discount |
-
-| Low intent | Remaining 70% | Don't contact this week |
-
-
-
 \---
 
 
 
 \## Next steps
 
-1\. \*\*Uplift modeling:\*\* predict who buys \*because of\* an offer, using A/B test data.
+1\. \*\*Uplift modeling:\*\* find who buys \*because of\* an offer, using A/B test data.
 
 2\. \*\*Features:\*\* price compared with the category average, history from earlier months, product-level buy rates.
 
-3\. \*\*Survival analysis\*\* to predict \*when\* a user will buy.
+3\. \*\*Survival analysis:\*\* predict \*when\* a user will buy, not only whether.
 
 4\. \*\*Bot filter:\*\* a rule-based filter instead of removing one confirmed bot by ID.
 
@@ -528,7 +722,7 @@ SHAP shows the model relies on behavior, matching the EDA. \*\*Recent activity i
 
 \- \*\*One holiday season:\*\* the model can't learn holiday effects.
 
-\- \*\*Likely, not caused:\*\* the model finds who is likely to buy, not who buys because of a reminder. That needs an A/B test with a holdout group.
+\- \*\*Likely, not caused:\*\* the model finds who is likely to buy, not who buys because of a reminder. Measuring that needs an A/B test with a holdout group.
 
 
 
@@ -564,7 +758,7 @@ python src/export\_powerbi.py
 
 
 
-The full analysis is in `notebooks/01\_loading\_and\_cleaning.ipynb`.
+The full analysis is in \[notebooks/01\_loading\_and\_cleaning.ipynb](notebooks/01\_loading\_and\_cleaning.ipynb).
 
 
 
