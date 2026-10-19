@@ -1,0 +1,15 @@
+feature,avg_shap
+days_since_last,0.5367
+cart,0.306
+view,0.2417
+remove_from_cart,0.1989
+days_since_last_cart,0.1561
+days_since_first,0.1013
+views_per_session,0.0824
+avg_brand_rate,0.0747
+past_purchases,0.0722
+sessions,0.0625
+remove_per_cart,0.0563
+avg_price,0.0282
+last_hour,0.0086
+last_weekday,0.0047

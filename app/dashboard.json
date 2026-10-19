@@ -1,0 +1,56 @@
+{
+  "drivers": {
+    "view": 0.2417,
+    "cart": 0.306,
+    "remove_from_cart": 0.1989,
+    "past_purchases": 0.0722,
+    "sessions": 0.0625,
+    "avg_price": 0.0282,
+    "views_per_session": 0.0824,
+    "remove_per_cart": 0.0563,
+    "days_since_last": 0.5367,
+    "days_since_first": 0.1013,
+    "days_since_last_cart": 0.1561,
+    "avg_brand_rate": 0.0747,
+    "last_hour": 0.0086,
+    "last_weekday": 0.0047
+  },
+  "monthly": [
+    {
+      "month": "2019-Oct",
+      "visitors": 399634,
+      "buyers": 25762,
+      "sales": 1210921.55,
+      "spend_per_buyer": 47.0
+    },
+    {
+      "month": "2019-Nov",
+      "visitors": 368183,
+      "buyers": 31524,
+      "sales": 1530831.06,
+      "spend_per_buyer": 48.56
+    },
+    {
+      "month": "2019-Dec",
+      "visitors": 370108,
+      "buyers": 25613,
+      "sales": 1077689.23,
+      "spend_per_buyer": 42.08
+    },
+    {
+      "month": "2020-Jan",
+      "visitors": 410018,
+      "buyers": 28220,
+      "sales": 1321825.06,
+      "spend_per_buyer": 46.84
+    },
+    {
+      "month": "2020-Feb",
+      "visitors": 391005,
+      "buyers": 25759,
+      "sales": 1207000.8,
+      "spend_per_buyer": 46.86
+    }
+  ],
+  "avg_order_value": 46.86
+}

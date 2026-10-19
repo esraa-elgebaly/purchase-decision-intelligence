@@ -1,0 +1,35 @@
+{
+  "features": [
+    "view",
+    "cart",
+    "remove_from_cart",
+    "past_purchases",
+    "sessions",
+    "avg_price",
+    "views_per_session",
+    "remove_per_cart",
+    "days_since_last",
+    "days_since_first",
+    "days_since_last_cart",
+    "avg_brand_rate",
+    "last_hour",
+    "last_weekday"
+  ],
+  "threshold_top_10_percent": 0.10002270134744783,
+  "trained_on": [
+    "2019-10",
+    "2019-12",
+    "2020-01"
+  ],
+  "settings": {
+    "learning_rate": 0.05,
+    "num_leaves": 15,
+    "min_child_samples": 500,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.8
+  },
+  "number_of_trees": 75,
+  "february_pr_auc": 0.158,
+  "february_random_pr_auc": 0.043
+}

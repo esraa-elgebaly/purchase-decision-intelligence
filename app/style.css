@@ -1,0 +1,24 @@
+footer {visibility: hidden;}
+.block-container {padding-top: 2rem; max-width: 1250px;}
+[data-testid="stSidebar"] {background: #FFFFFF; border-right: 1px solid #E5E7EB;}
+
+.hero {background: linear-gradient(120deg, #0F766E, #134E4A); border-radius: 16px; padding: 22px 26px; margin-bottom: 18px;}
+.hero .title {color: #FFFFFF; font-size: 28px; font-weight: 700;}
+.hero .text {color: #CCFBF1; font-size: 15px; margin-top: 6px; max-width: 900px;}
+.chip {display: inline-block; background: rgba(255,255,255,.16); color: #FFFFFF; border-radius: 999px; padding: 3px 11px; font-size: 12px; margin: 12px 6px 0 0;}
+
+.kpi {background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 16px 18px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,.04);}
+.kpi.best {border: 2px solid #0F766E; background: #F0FDFA;}
+.kpi .label {color: #6B7280; font-size: 13px;}
+.kpi .value {color: #111827; font-size: 28px; font-weight: 700; margin: 4px 0;}
+.kpi .note {color: #0F766E; font-size: 12px;}
+
+.card {background: #FFFFFF; border: 1px solid #E5E7EB; border-left: 6px solid var(--c); border-radius: 12px; padding: 14px 16px; height: 100%;}
+.card .name {color: #111827; font-size: 16px; font-weight: 700;}
+.card .meta {color: #6B7280; font-size: 12px; margin: 2px 0 8px;}
+.card .act {color: var(--c); font-weight: 700;}
+.card .why {color: #4B5563; font-size: 13px; margin-top: 4px;}
+
+.sec {color: #111827; font-size: 19px; font-weight: 700; margin: 28px 0 2px;}
+.sub {color: #6B7280; font-size: 13px; margin-bottom: 12px;}
+.tag {display: inline-block; background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; border-radius: 999px; padding: 5px 13px; margin: 0 6px 8px 0; font-size: 14px;}

@@ -1,0 +1,7 @@
+{
+  "name": "Cart Recovery",
+  "dataColors": ["#0F766E", "#F4A261", "#94A3B8", "#E76F51", "#1F2937"],
+  "background": "#FFFFFF",
+  "foreground": "#1F2937",
+  "tableAccent": "#0F766E"
+}
